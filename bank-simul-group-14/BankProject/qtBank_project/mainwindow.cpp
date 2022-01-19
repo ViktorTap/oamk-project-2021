@@ -1,0 +1,87 @@
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+#include "virheform.h"
+
+MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+
+
+    timer = new QTimer(this);
+    connect(timer,SIGNAL(timeout()),this,SLOT(close()));
+    timer->start(45000);
+}
+
+MainWindow::~MainWindow()
+{
+    delete ui;
+    ui = nullptr;
+}
+
+void MainWindow::on_pushButton_Kirjaudu_sis_clicked()
+{
+
+    QJsonObject json;
+    json.insert("korttinumero", ui->lineEdit_Korttinumero->text());
+    json.insert("PIN", ui->lineEdit_Pin->text());
+
+    QString site_url="http://localhost:3000/kirjaudu";
+    QString credentials="newAdmin:newPass";
+
+    QNetworkRequest request((site_url));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    QByteArray data = credentials.toLocal8Bit().toBase64();
+    QString headerData = "Basic " + data;
+
+    request.setRawHeader( "Authorization", headerData.toLocal8Bit() );
+    loginManager = new QNetworkAccessManager(this);
+
+    connect(loginManager, SIGNAL(finished (QNetworkReply*)),
+    this, SLOT(loginSlot(QNetworkReply*)));
+    reply = loginManager->post(request, QJsonDocument(json).toJson());
+}
+
+int passCount = 0;
+
+void MainWindow::loginSlot(QNetworkReply *reply)
+{
+
+    QByteArray response_data = reply->readAll();
+    qDebug()<<response_data;
+
+
+    if(response_data != "false") {
+        qDebug()<< "Oikea tunnus ...avaa form";
+
+        objPankkiMenu = new PankkiMenu(response_data);
+        objPankkiMenu->show();
+
+        // hide(); // piilottaa mainwindow
+    }
+
+//    else if(response_data == 0) {
+//        qDebug()<< "Korttinumero puuttuu";
+//        ++passCount;
+//    }
+
+    else if(passCount == 2){
+        qDebug() <<"woop woop end the program!";
+        hide(); // piilottaa mainwindow
+        VirheForm virheIkkuna;
+        virheIkkuna.setModal(true);
+        virheIkkuna.exec();
+    }
+
+    else {
+        ui->lineEdit_Korttinumero->setText("");
+        ui->lineEdit_Pin->setText("");
+        ui->label_info->setText("Virhelliset tiedot");
+        qDebug()<<"tunnus ja salasana ei täsmää";
+
+        ++passCount;
+        qDebug()<<passCount;
+        }
+}
