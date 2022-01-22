@@ -22,12 +22,6 @@ function myAuthorizer(username, password, cb){
     }
 }
 
-var bookRouter = require('./routes/book');
-var borrowerRouter = require('./routes/borrower');
-var userRouter = require('./routes/user');
-var loginRouter = require('./routes/login');
-var bankRouter = require('./routes/bank');
-
 var uusiKorttiRouter = require('./routes/uusi_kortti')
 var asiakasRouter = require('./routes/asiakas');
 var asiakasKorttiRouter = require('./routes/asiakas_kortti');
@@ -42,12 +36,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/book', bookRouter);
-app.use('/borrower', borrowerRouter);
-app.use('/user', userRouter);
-app.use('/login', loginRouter);
-app.use('/bank', bankRouter);
 
 app.use('/uusi_kortti', uusiKorttiRouter);
 app.use('/asiakas', asiakasRouter);
